@@ -2,36 +2,8 @@ import { useContext } from 'react';
 import { FirebaseContext } from '../config/Firebase/FirebaseContext';
 import { randomBytes } from 'crypto';
 
-const base_url = "https://app.alpaca.markets";
 const client_id = process.env.REACT_APP_ALPACA_CLIENT;
-const client_secret = process.env.REACT_APP_ALPACA_CLIENT_SECRET;
 const redirect_uri = encodeURIComponent('http://localhost:3000/');
-
-const requestIsValid = (init_state, returned_state) => (init_state === returned_state);
-
-const openAlpacaPopup = (uri) => {
-    return new Promise((resolve, reject) => {
-        const authWindow = window.open(uri);
-        let snippet = uri | null;
-
-        const interval = setInterval(async () => {
-            try {
-                snippet = authWindow && authWindow.location && authWindow.location.search
-            } catch (e) {
-                if (snippet) {
-                    const rawCode = snippet.substring(1);
-                    const parsedCode = JSON.parse('{"' + rawCode.replace(/&/g, '","').replace(/=/g, '":"') + '"}',
-                        function (key, value) { 
-                            return key === "" ? value : decodeURIComponent(value) 
-                    });
-                    authWindow.close();
-                    resolve(parsedCode);
-                    clearInterval(interval)
-                }
-            }
-        }, 100);
-    })
-}
 
 export const AlpacaConnectButton = () => {
     const firebase = useContext(FirebaseContext);
@@ -60,6 +32,32 @@ export const AlpacaConnectButton = () => {
                 error.message = e.message;
                 console.log(error);
             }
+    }
+
+    const requestIsValid = (init_state, returned_state) => (init_state === returned_state);
+
+    const openAlpacaPopup = (uri) => {
+        return new Promise((resolve, reject) => {
+            const authWindow = window.open(uri);
+            let snippet = uri | null;
+
+            const interval = setInterval(async () => {
+                try {
+                    snippet = authWindow && authWindow.location && authWindow.location.search
+                } catch (e) {
+                    if (snippet) {
+                        const rawCode = snippet.substring(1);
+                        const parsedCode = JSON.parse('{"' + rawCode.replace(/&/g, '","').replace(/=/g, '":"') + '"}',
+                            function (key, value) {
+                                return key === "" ? value : decodeURIComponent(value)
+                            });
+                        authWindow.close();
+                        resolve(parsedCode);
+                        clearInterval(interval)
+                    }
+                }
+            }, 100);
+        })
     }
 
     return (
