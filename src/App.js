@@ -1,12 +1,15 @@
-import { AlpacaConnectButton } from "./components/AlpacaConnectButton";
+import React from 'react';
+import { Switch, Route } from 'react'
+import Dashboard from './pages/Dashboard'
+import Landing from './pages/Landing';
+import AuthenticatedRoute from './session/AuthenticatedRoute'
 
-
-
-function App() {
+export const App = () => {
   return (
-    <div className="App">
-      <AlpacaConnectButton/>
-    </div>
+    <Switch>
+      <Route exact path="/" component={Landing}/>
+      <AuthenticatedRoute exact path="/dashboard" component={Dashboard}/>
+    </Switch>
   );
 }
 

@@ -1,16 +1,22 @@
-import { useContext } from 'react';
+import { useContext, useState } from 'react';
 import { FirebaseContext } from '../config/Firebase/FirebaseContext';
+import { AuthContext } from '../session/AuthContext';
 import { randomBytes } from 'crypto';
 
 const client_id = process.env.REACT_APP_ALPACA_CLIENT;
 const redirect_uri = encodeURIComponent('http://localhost:3000/');
 
-export const AlpacaConnectButton = () => {
+export const AlpacaConnectButton = ({ props }) => {
     const firebase = useContext(FirebaseContext);
-    
-    const connectToAlpaca = async (e) => {
-        e.preventDefault();
+    const { actions } = useContext(AuthContext);
+    const [ error, setError ] = useState({});
+    const [ loading, setLoading ] = useState(false);
 
+    const connectToAlpaca = async (e) => {
+        setLoading(true);
+
+        //Change to false for deployment
+        const dev = true;
         const random_string = randomBytes(20).toString('hex');
         const codeURI =
             `https://app.alpaca.markets/oauth/authorize?` +
@@ -25,7 +31,11 @@ export const AlpacaConnectButton = () => {
                 if (!requestIsValid(random_string, state)) {
                     throw new Error('Alpaca Authentication Invalid')
                 }
-                console.log(code);
+                const getAlpacaAuthorization = firebase.functions.httpsCallable('getAlpacaAuthorization');
+                const { data } = await getAlpacaAuthorization({ code, dev})
+                await actions.login(data);
+                
+                props.history.push('/dashboard')
                 console.log(state);
             } catch (e) {
                 const error = {};
